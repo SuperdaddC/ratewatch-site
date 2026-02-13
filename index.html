@@ -80,6 +80,14 @@ nav a.nav-cta:hover{background:var(--blue-dark)}
 .card-term{background:linear-gradient(135deg,var(--blue-dark),#2563eb);color:var(--white)}
 .card-invest{background:linear-gradient(135deg,#7c3aed,#a855f7);color:var(--white)}
 
+.result-card .balance-at-ret{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.2);font-size:.78rem;opacity:.85}
+.result-card .balance-at-ret strong{font-size:.95rem;font-weight:700;display:block;margin-top:2px}
+.field input::placeholder{color:var(--gray-400);opacity:.5}
+.field select{color:var(--gray-800)}
+.retirement-input-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:24px;margin-bottom:4px}
+.retirement-input-row label{font-size:.85rem;font-weight:600;color:var(--gray-600)}
+.retirement-input-row input{width:60px;padding:8px;border:2px solid var(--gray-200);border-radius:8px;font-size:1rem;font-weight:700;text-align:center;font-family:inherit}
+.retirement-input-row input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.15)}
 .result-card .big.zero{opacity:.4}
 .result-disclaimer{font-size:.65rem;color:var(--gray-400);text-align:center;margin-top:12px;max-width:600px;margin-left:auto;margin-right:auto}
 
@@ -221,28 +229,31 @@ footer .ehl{font-size:1.2rem;margin-bottom:8px}
 <!-- RESULTS -->
 <div id="resultsArea">
 <div class="results-placeholder" id="resultsPlaceholder">Enter your loan details above to see your potential savings</div>
+<div class="retirement-input-row">
+<label for="retirementYears">Years to Retirement:</label>
+<input type="number" id="retirementYears" value="25" min="1" max="50">
+</div>
 <div class="results-row" id="resultsRow" style="display:none">
 <div class="result-card card-savings">
 <div class="icon">💰</div>
 <div class="big" id="resMonthlySavings">$0/mo</div>
 <div class="label">Monthly Savings</div>
 <div class="sub" id="resYearlySavings">$0/year</div>
+<div class="balance-at-ret" id="retBalSavings"></div>
 </div>
 <div class="result-card card-term">
 <div class="icon">⏱️</div>
 <div class="big" id="resTermShorten">—</div>
 <div class="label">Payoff Timeline</div>
 <div class="sub" id="resTermSub">Instead of 30 years</div>
+<div class="balance-at-ret" id="retBalTerm"></div>
 </div>
 <div class="result-card card-invest">
 <div class="icon">📈</div>
 <div class="big" id="res401k">$0</div>
 <div class="label">401(k) Growth</div>
-<div style="margin:8px auto 4px;display:flex;align-items:center;justify-content:center;gap:6px">
-<label for="retirementYears" style="font-size:.75rem;opacity:.85;white-space:nowrap">Years to Retirement:</label>
-<input type="number" id="retirementYears" value="25" min="1" max="50" style="width:52px;padding:4px 6px;border:1px solid rgba(255,255,255,.3);border-radius:6px;background:rgba(255,255,255,.15);color:var(--white);font-size:.85rem;font-weight:700;text-align:center;font-family:inherit">
-</div>
 <div class="sub" id="res401kSub">At 7% avg annual return</div>
+<div class="balance-at-ret" id="retBalInvest"></div>
 </div>
 </div>
 <div class="result-disclaimer" id="resultDisclaimer" style="display:none">
@@ -359,6 +370,25 @@ function solveMonths(principal, annualRate, payment) {
   return -Math.log(x) / Math.log(1 + r);
 }
 
+function balanceAfterNMonths(principal, annualRate, totalMonths, monthsPaid, monthlyPmt) {
+  // Given a loan, what's the balance after monthsPaid payments?
+  const r = annualRate / 100 / 12;
+  if (r === 0) return Math.max(principal - monthlyPmt * monthsPaid, 0);
+  // B = P(1+r)^n - pmt*[(1+r)^n - 1]/r
+  const n = Math.min(monthsPaid, totalMonths);
+  const bal = principal * Math.pow(1 + r, n) - monthlyPmt * (Math.pow(1 + r, n) - 1) / r;
+  return Math.max(bal, 0);
+}
+
+function balanceAfterNMonthsAccel(principal, annualRate, monthsPaid, accelPmt) {
+  // Accelerated payments — might pay off early
+  const r = annualRate / 100 / 12;
+  if (r === 0) return Math.max(principal - accelPmt * monthsPaid, 0);
+  const n = monthsPaid;
+  const bal = principal * Math.pow(1 + r, n) - accelPmt * (Math.pow(1 + r, n) - 1) / r;
+  return Math.max(bal, 0);
+}
+
 function futureValue(monthlyContrib, annualReturn, months) {
   const r = annualReturn / 12;
   return monthlyContrib * (Math.pow(1 + r, months) - 1) / r;
@@ -454,15 +484,23 @@ function recalc() {
   document.getElementById('resultsRow').style.display = 'grid';
   document.getElementById('resultDisclaimer').style.display = 'block';
 
+  const retYears = parseInt(document.getElementById('retirementYears').value) || 25;
+  const retMonths = retYears * 12;
+
+  // Normal new loan balance at retirement (used by Box 1 & 3)
+  const normalBalAtRet = balanceAfterNMonths(currentBalance, newRate, 360, Math.min(retMonths, 360), newPayment);
+
   // Box 1: Monthly Savings
   if (savings > 0) {
     document.getElementById('resMonthlySavings').textContent = '$' + Math.round(savings).toLocaleString() + '/mo';
     document.getElementById('resMonthlySavings').classList.remove('zero');
     document.getElementById('resYearlySavings').textContent = '$' + Math.round(savings * 12).toLocaleString() + '/year';
+    document.getElementById('retBalSavings').innerHTML = 'Balance at retirement:<strong>$' + Math.round(normalBalAtRet).toLocaleString() + '</strong>';
   } else {
     document.getElementById('resMonthlySavings').textContent = '$0/mo';
     document.getElementById('resMonthlySavings').classList.add('zero');
     document.getElementById('resYearlySavings').textContent = 'New rate is higher than current';
+    document.getElementById('retBalSavings').innerHTML = '';
   }
 
   // Box 2: Shortened Term (reinvest savings as extra principal on NEW loan)
@@ -471,37 +509,43 @@ function recalc() {
     const accelMonths = solveMonths(currentBalance, newRate, acceleratedPayment);
     const normalMonths = 360;
     const savedMonths = normalMonths - accelMonths;
-    const savedYears = Math.floor(savedMonths / 12);
-    const savedMo = Math.round(savedMonths % 12);
-    const doneInYears = Math.ceil(accelMonths / 12);
     if (savedMonths > 0) {
       const doneYrs = Math.floor(accelMonths / 12);
       const doneMo = Math.round(accelMonths % 12);
       document.getElementById('resTermShorten').textContent = 'Paid off in ' + doneYrs + (doneMo > 0 ? '.5' : '') + ' years';
       document.getElementById('resTermSub').textContent = 'Instead of 30 years';
+      // Balance at retirement with accelerated payments
+      const accelBalAtRet = balanceAfterNMonthsAccel(currentBalance, newRate, Math.min(retMonths, Math.ceil(accelMonths)), acceleratedPayment);
+      if (accelBalAtRet <= 0 || retMonths >= accelMonths) {
+        document.getElementById('retBalTerm').innerHTML = 'Balance at retirement:<strong>$0 — Paid off! 🎉</strong>';
+      } else {
+        document.getElementById('retBalTerm').innerHTML = 'Balance at retirement:<strong>$' + Math.round(accelBalAtRet).toLocaleString() + '</strong>';
+      }
     } else {
       document.getElementById('resTermShorten').textContent = '30 years';
       document.getElementById('resTermSub').textContent = 'No acceleration';
+      document.getElementById('retBalTerm').innerHTML = 'Balance at retirement:<strong>$' + Math.round(normalBalAtRet).toLocaleString() + '</strong>';
     }
     document.getElementById('resTermShorten').classList.remove('zero');
   } else {
     document.getElementById('resTermShorten').textContent = '—';
     document.getElementById('resTermShorten').classList.add('zero');
     document.getElementById('resTermSub').textContent = '';
+    document.getElementById('retBalTerm').innerHTML = '';
   }
 
   // Box 3: 401(k) Growth
-  const retYears = parseInt(document.getElementById('retirementYears').value) || 25;
-  const retMonths = retYears * 12;
   if (savings > 0) {
     const fv = futureValue(savings, 0.07, retMonths);
     document.getElementById('res401k').textContent = '$' + Math.round(fv).toLocaleString();
     document.getElementById('res401k').classList.remove('zero');
     document.getElementById('res401kSub').textContent = 'Over ' + retYears + ' years at 7% avg return';
+    document.getElementById('retBalInvest').innerHTML = 'Balance at retirement:<strong>$' + Math.round(normalBalAtRet).toLocaleString() + '</strong><br><span style="font-size:.7rem;opacity:.7">But you\'ll have $' + Math.round(fv).toLocaleString() + ' invested</span>';
   } else {
     document.getElementById('res401k').textContent = '$0';
     document.getElementById('res401k').classList.add('zero');
     document.getElementById('res401kSub').textContent = 'At 7% avg annual return';
+    document.getElementById('retBalInvest').innerHTML = '';
   }
 
   // Pre-fill signup target rate
