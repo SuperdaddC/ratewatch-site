@@ -8,13 +8,13 @@
 <meta property="og:title" content="Rate Watch — See How Much You Could Save">
 <meta property="og:description" content="Enter your mortgage details and instantly see your potential monthly savings, shortened payoff, and investment growth.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://rates.thecolyerteam.com">
+<meta property="og:url" content="https://ratewatch.thecolyerteam.com">
 <meta property="og:image" content="https://apuctuqlmykeemtcasji.supabase.co/storage/v1/object/public/profile-photos/57f82d21-31e6-45b9-aa0d-c7b8764f464a/1770136298733-ri7748.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FinancialService","name":"The Colyer Team - Rate Watch","description":"Free mortgage rate monitoring and refinance alerts","url":"https://rates.thecolyerteam.com","employee":{"@type":"Person","name":"Michael Colyer","jobTitle":"Mortgage Loan Officer"},"address":{"@type":"PostalAddress","streetAddress":"1536 Mission Meadows Dr","addressLocality":"Oceanside","addressRegion":"CA","postalCode":"92057"}}
+{"@context":"https://schema.org","@type":"FinancialService","name":"The Colyer Team - Rate Watch","description":"Free mortgage rate monitoring and refinance alerts","url":"https://ratewatch.thecolyerteam.com","employee":{"@type":"Person","name":"Michael Colyer","jobTitle":"Mortgage Loan Officer"},"address":{"@type":"PostalAddress","streetAddress":"1536 Mission Meadows Dr","addressLocality":"Oceanside","addressRegion":"CA","postalCode":"92057"}}
 </script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -282,6 +282,11 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 <div class="field"><label for="phone">Phone (optional)</label><input type="tel" id="phone"></div>
 <div class="field full"><label for="calcAddress">Property Address</label><input type="text" id="calcAddress" placeholder="123 Main St, City, CA 92057"></div>
 <div class="field"><label for="targetRate">Target Rate (%)</label><input type="number" id="targetRate" step="0.125" min="0" max="15" placeholder="Pre-filled from slider"></div>
+<!-- Honeypot — hidden from humans, bots fill it in -->
+<div class="field" style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
+<label for="website">Website</label>
+<input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+</div>
 </div>
 <button type="submit" class="submit-btn" id="submitBtn">🔔 Alert Me When Rates Drop</button>
 </form>
@@ -588,6 +593,51 @@ document.getElementById('rateSlider').addEventListener('input', function() {
 document.getElementById('signupForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
+
+  // Honeypot check — bots fill hidden fields
+  if (document.getElementById('website').value) {
+    btn.disabled = true; btn.textContent = 'Submitting...';
+    setTimeout(() => {
+      document.getElementById('signupForm').classList.add('hidden');
+      const msg = document.getElementById('successMsg');
+      msg.classList.add('show');
+      document.getElementById('successText').textContent = "We'll email you when rates hit your target!";
+    }, 1500);
+    return;
+  }
+
+  // Basic validation
+  const emailVal = document.getElementById('email').value.trim();
+  const phoneVal = (document.getElementById('phone').value || '').replace(/\D/g, '');
+  const addrVal = (document.getElementById('calcAddress').value || '').trim();
+  const fnVal = (document.getElementById('firstName').value || '').trim();
+  const lnVal = (document.getElementById('lastName').value || '').trim();
+
+  // Phone validation: if provided, must be 10-11 digits
+  if (phoneVal && (phoneVal.length < 10 || phoneVal.length > 11)) {
+    alert('Please enter a valid phone number.');
+    return;
+  }
+
+  // Address validation: if provided, must be at least 8 chars
+  if (addrVal && addrVal.length < 8) {
+    alert('Please enter a full property address.');
+    return;
+  }
+
+  // Name validation: no single-char names
+  if (fnVal.length < 2 || lnVal.length < 2) {
+    alert('Please enter your full name.');
+    return;
+  }
+
+  // Email validation: basic format + no disposable domains
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(emailVal)) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+
   btn.disabled = true; btn.textContent = 'Submitting...';
 
   const state = getLoanState();
