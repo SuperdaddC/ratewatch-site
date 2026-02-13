@@ -173,6 +173,16 @@ footer .ehl{font-size:1.2rem;margin-bottom:8px}
 </select>
 </div>
 
+<!-- Property -->
+<div class="field full">
+<label for="calcAddress">Property Address</label>
+<input type="text" id="calcAddress" placeholder="123 Main St, City, CA 92057">
+</div>
+<div class="field">
+<label for="calcValue">Estimated Property Value ($)</label>
+<input type="number" id="calcValue" step="1000" min="0" placeholder="650000">
+</div>
+
 <!-- Year / Remaining Term toggle -->
 <div class="field full">
 <div class="toggle-tabs" id="termToggle">
@@ -588,6 +598,11 @@ document.getElementById('signupForm').addEventListener('submit', async function(
   const newRate = parseFloat(document.getElementById('rateSlider').value) || null;
   const savings = state ? Math.round(monthlyPayment(state.currentBalance, state.curRate, state.remainingMonths) - monthlyPayment(state.currentBalance, newRate, 360)) : null;
 
+  const origBal = parseInt(document.getElementById('calcOrigBalance').value) || null;
+  const yearVal = parseInt(document.getElementById('calcYear').value) || null;
+  const remVal = parseInt(document.getElementById('calcRemaining').value) || null;
+  const retYrs = parseInt(document.getElementById('retirementYears').value) || null;
+
   const body = {
     first_name: document.getElementById('firstName').value || null,
     last_name: document.getElementById('lastName').value || null,
@@ -596,7 +611,13 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     current_rate: state ? state.curRate : null,
     target_rate: parseFloat(document.getElementById('targetRate').value) || null,
     current_balance: state ? Math.round(state.currentBalance) : null,
-    occupancy_type: document.getElementById('calcOccupancy').value,
+    occupancy_type: document.getElementById('calcOccupancy').value || null,
+    property_address: document.getElementById('calcAddress').value || null,
+    estimated_value: parseInt(document.getElementById('calcValue').value) || null,
+    origination_year: yearVal,
+    remaining_term_months: state ? state.remainingMonths : (remVal ? remVal * 12 : null),
+    original_loan_balance: origBal,
+    years_to_retirement: retYrs,
     calculated_savings_monthly: savings > 0 ? savings : null,
     source: 'website'
   };
