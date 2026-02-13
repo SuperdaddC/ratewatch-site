@@ -32,21 +32,18 @@ nav a.nav-cta{background:var(--blue);color:var(--white);padding:8px 20px;border-
 nav a.nav-cta:hover{background:var(--blue-dark)}
 
 /* HERO */
-.hero{background:linear-gradient(135deg,var(--blue-dark) 0%,#2563eb 100%);color:var(--white);padding:60px 0 50px;text-align:center}
-.hero h1{font-size:clamp(1.8rem,5vw,2.8rem);font-weight:800;margin-bottom:12px;line-height:1.2}
-.hero p{font-size:1.1rem;opacity:.9;max-width:620px;margin:0 auto 20px}
-.hero-arrow{font-size:2rem;opacity:.6;animation:bounce 2s infinite}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+.hero{background:linear-gradient(135deg,var(--blue-dark) 0%,#2563eb 100%);color:var(--white);padding:14px 0;text-align:center}
+.hero h1{font-size:1.15rem;font-weight:700;margin:0;line-height:1.3;opacity:.95}
 
 /* CALCULATOR */
-.calc-section{padding:50px 0;background:var(--gray-50)}
-.section-title{text-align:center;font-size:1.6rem;font-weight:700;margin-bottom:8px;color:var(--gray-900)}
-.section-sub{text-align:center;color:var(--gray-600);margin-bottom:30px;font-size:.95rem}
-.calc-box{background:var(--white);border:2px solid var(--gray-200);border-radius:16px;padding:30px;max-width:750px;margin:0 auto;box-shadow:var(--shadow-lg)}
-.calc-inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.calc-section{padding:20px 0 30px;background:var(--gray-50)}
+.section-title{text-align:center;font-size:1.2rem;font-weight:700;margin-bottom:4px;color:var(--gray-900)}
+.section-sub{text-align:center;color:var(--gray-600);margin-bottom:16px;font-size:.85rem}
+.calc-box{background:var(--white);border:2px solid var(--gray-200);border-radius:16px;padding:20px 24px;max-width:900px;margin:0 auto;box-shadow:var(--shadow-lg)}
+.calc-inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:600px){.calc-inputs{grid-template-columns:1fr}}
 .field label{display:block;font-size:.8rem;font-weight:600;color:var(--gray-600);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
-.field input,.field select{width:100%;padding:12px;border:1px solid var(--gray-200);border-radius:8px;font-size:1rem;font-family:inherit;transition:border .2s}
+.field input,.field select{width:100%;padding:10px;border:1px solid var(--gray-200);border-radius:8px;font-size:.95rem;font-family:inherit;transition:border .2s}
 .field input:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.15)}
 .field.full{grid-column:1/-1}
 
@@ -56,9 +53,9 @@ nav a.nav-cta:hover{background:var(--blue-dark)}
 .toggle-tabs button.active{background:var(--white);color:var(--blue);box-shadow:var(--shadow)}
 
 /* SLIDER */
-.slider-section{margin-top:30px;padding-top:24px;border-top:2px solid var(--gray-100)}
+.slider-section{margin-top:16px;padding-top:14px;border-top:2px solid var(--gray-100)}
 .slider-label{font-size:.9rem;font-weight:700;color:var(--gray-800);text-align:center;margin-bottom:4px}
-.slider-value{text-align:center;font-size:2.8rem;font-weight:800;color:var(--blue);margin-bottom:16px;transition:color .2s}
+.slider-value{text-align:center;font-size:2.2rem;font-weight:800;color:var(--blue);margin-bottom:10px;transition:color .2s}
 .slider-container{position:relative;padding:0 4px}
 .slider-container input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--green) 0%,var(--gold) 50%,#dc2626 100%);outline:none;cursor:pointer}
 .slider-container input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:32px;height:32px;border-radius:50%;background:var(--white);border:3px solid var(--blue);box-shadow:var(--shadow-lg);cursor:grab;transition:transform .1s}
@@ -67,11 +64,11 @@ nav a.nav-cta:hover{background:var(--blue-dark)}
 .slider-bounds{display:flex;justify-content:space-between;font-size:.75rem;color:var(--gray-400);margin-top:6px}
 
 /* RESULTS */
-.results-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:30px}
+.results-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px}
 @media(max-width:700px){.results-row{grid-template-columns:1fr}}
-.result-card{border-radius:var(--radius);padding:24px 20px;text-align:center;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;transition:transform .2s}
+.result-card{border-radius:var(--radius);padding:18px 16px;text-align:center;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;transition:transform .2s}
 .result-card:hover{transform:translateY(-2px)}
-.result-card .icon{font-size:2rem;margin-bottom:8px}
+.result-card .icon{font-size:1.5rem;margin-bottom:4px}
 .result-card .big{font-size:2rem;font-weight:800;line-height:1.1;transition:all .3s}
 .result-card .label{font-size:.9rem;font-weight:600;margin-top:4px;opacity:.9}
 .result-card .sub{font-size:.8rem;opacity:.7;margin-top:6px}
@@ -84,7 +81,7 @@ nav a.nav-cta:hover{background:var(--blue-dark)}
 .result-card .balance-at-ret strong{font-size:.95rem;font-weight:700;display:block;margin-top:2px}
 .field input::placeholder{color:var(--gray-400);opacity:.5}
 .field select{color:var(--gray-800)}
-.retirement-input-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:24px;margin-bottom:4px}
+.retirement-input-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;margin-bottom:2px}
 .retirement-input-row label{font-size:.85rem;font-weight:600;color:var(--gray-600)}
 .retirement-input-row input{width:60px;padding:8px;border:2px solid var(--gray-200);border-radius:8px;font-size:1rem;font-weight:700;text-align:center;font-family:inherit}
 .retirement-input-row input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.15)}
@@ -149,9 +146,7 @@ footer .ehl{font-size:1.2rem;margin-bottom:8px}
 <!-- HERO -->
 <section class="hero">
 <div class="container">
-<h1>How Much Could You Save by Refinancing?</h1>
-<p>Enter your current loan details below and instantly see your potential monthly savings, shortened payoff timeline, and long-term investment growth.</p>
-<div class="hero-arrow">↓</div>
+<h1>How much could you save by refinancing? Enter your details below ↓</h1>
 </div>
 </section>
 
