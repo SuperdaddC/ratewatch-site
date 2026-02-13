@@ -230,15 +230,19 @@ footer .ehl{font-size:1.2rem;margin-bottom:8px}
 </div>
 <div class="result-card card-term">
 <div class="icon">⏱️</div>
-<div class="big" id="resTermShorten">0 years early</div>
-<div class="label">Shortened Term</div>
-<div class="sub" id="resTermSub">Done in 30 years</div>
+<div class="big" id="resTermShorten">—</div>
+<div class="label">Payoff Timeline</div>
+<div class="sub" id="resTermSub">Instead of 30 years</div>
 </div>
 <div class="result-card card-invest">
 <div class="icon">📈</div>
 <div class="big" id="res401k">$0</div>
 <div class="label">401(k) Growth</div>
-<div class="sub" id="res401kSub">If invested over 30 years at 7% avg return</div>
+<div style="margin:8px auto 4px;display:flex;align-items:center;justify-content:center;gap:6px">
+<label for="retirementYears" style="font-size:.75rem;opacity:.85;white-space:nowrap">Years to Retirement:</label>
+<input type="number" id="retirementYears" value="25" min="1" max="50" style="width:52px;padding:4px 6px;border:1px solid rgba(255,255,255,.3);border-radius:6px;background:rgba(255,255,255,.15);color:var(--white);font-size:.85rem;font-weight:700;text-align:center;font-family:inherit">
+</div>
+<div class="sub" id="res401kSub">At 7% avg annual return</div>
 </div>
 </div>
 <div class="result-disclaimer" id="resultDisclaimer" style="display:none">
@@ -471,11 +475,13 @@ function recalc() {
     const savedMo = Math.round(savedMonths % 12);
     const doneInYears = Math.ceil(accelMonths / 12);
     if (savedMonths > 0) {
-      document.getElementById('resTermShorten').textContent = 'Pay off ' + savedYears + (savedMo > 0 ? '+' : '') + ' years early';
-      document.getElementById('resTermSub').textContent = 'Done in ~' + doneInYears + ' years instead of 30';
+      const doneYrs = Math.floor(accelMonths / 12);
+      const doneMo = Math.round(accelMonths % 12);
+      document.getElementById('resTermShorten').textContent = 'Paid off in ' + doneYrs + (doneMo > 0 ? '.5' : '') + ' years';
+      document.getElementById('resTermSub').textContent = 'Instead of 30 years';
     } else {
-      document.getElementById('resTermShorten').textContent = 'No change';
-      document.getElementById('resTermSub').textContent = '';
+      document.getElementById('resTermShorten').textContent = '30 years';
+      document.getElementById('resTermSub').textContent = 'No acceleration';
     }
     document.getElementById('resTermShorten').classList.remove('zero');
   } else {
@@ -485,13 +491,17 @@ function recalc() {
   }
 
   // Box 3: 401(k) Growth
+  const retYears = parseInt(document.getElementById('retirementYears').value) || 25;
+  const retMonths = retYears * 12;
   if (savings > 0) {
-    const fv = futureValue(savings, 0.07, 360);
+    const fv = futureValue(savings, 0.07, retMonths);
     document.getElementById('res401k').textContent = '$' + Math.round(fv).toLocaleString();
     document.getElementById('res401k').classList.remove('zero');
+    document.getElementById('res401kSub').textContent = 'Over ' + retYears + ' years at 7% avg return';
   } else {
     document.getElementById('res401k').textContent = '$0';
     document.getElementById('res401k').classList.add('zero');
+    document.getElementById('res401kSub').textContent = 'At 7% avg annual return';
   }
 
   // Pre-fill signup target rate
@@ -518,7 +528,7 @@ document.querySelectorAll('.toggle-tabs').forEach(group => {
 });
 
 // ===== Input listeners =====
-['calcRate', 'calcYear', 'calcRemaining', 'calcOrigBalance', 'calcCurBalance', 'calcOccupancy'].forEach(id => {
+['calcRate', 'calcYear', 'calcRemaining', 'calcOrigBalance', 'calcCurBalance', 'calcOccupancy', 'retirementYears'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('input', recalc);
   el.addEventListener('change', recalc);
