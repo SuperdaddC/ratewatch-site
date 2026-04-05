@@ -10,6 +10,13 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ratewatch.thecolyerteam.com">
 <meta property="og:image" content="https://apuctuqlmykeemtcasji.supabase.co/storage/v1/object/public/profile-photos/57f82d21-31e6-45b9-aa0d-c7b8764f464a/1770136298733-ri7748.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rate Watch — See How Much You Could Save">
+<meta name="twitter:description" content="Enter your mortgage details and instantly see your potential monthly savings, shortened payoff, and investment growth.">
+<meta name="twitter:image" content="https://apuctuqlmykeemtcasji.supabase.co/storage/v1/object/public/profile-photos/57f82d21-31e6-45b9-aa0d-c7b8764f464a/1770136298733-ri7748.png">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect rx='20' width='100' height='100' fill='%231a56db'/><text x='50' y='72' font-size='60' font-weight='bold' text-anchor='middle' fill='white'>R</text></svg>">
+<script defer data-domain="ratewatch.thecolyerteam.com" src="https://plausible.io/js/script.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -144,6 +151,28 @@ footer a:hover{color:var(--white)}
 
 .pulse{animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Mobile toggle label shortening */
+@media(max-width:600px){
+.toggle-tabs button{font-size:.7rem;padding:5px 10px}
+.toggle-tabs button .mobile-hide{display:none}
+}
+.toggle-tabs button .mobile-show{display:none}
+@media(max-width:600px){.toggle-tabs button .mobile-show{display:inline}}
+
+/* Spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Rate loading */
+.rate-loading{text-align:center;font-size:.85rem;color:var(--blue);padding:4px 0}
+
+/* Trust value props */
+.trust-values{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin:20px 0;max-width:600px;margin-left:auto;margin-right:auto}
+.trust-value{text-align:center;flex:1;min-width:120px}
+.trust-value .tv-icon{font-size:1.5rem;margin-bottom:4px}
+.trust-value .tv-label{font-size:.85rem;font-weight:600;color:var(--gray-800)}
+.trust-value .tv-sub{font-size:.75rem;color:var(--gray-600)}
 </style>
 </head>
 <body>
@@ -172,7 +201,7 @@ footer a:hover{color:var(--white)}
 <!-- Current Rate -->
 <div class="field">
 <label for="calcRate">Current Interest Rate (%)*</label>
-<input type="number" id="calcRate" step="0.125" min="0" max="15" placeholder="6.875" required>
+<input type="number" id="calcRate" step="0.125" min="0" max="15" placeholder="6.875" value="6.875" required>
 </div>
 
 <!-- Occupancy -->
@@ -186,8 +215,17 @@ footer a:hover{color:var(--white)}
 </div>
 
 <div class="field">
+<label for="calcTerm">Original Loan Term</label>
+<select id="calcTerm">
+<option value="30">30-Year Fixed</option>
+<option value="20">20-Year Fixed</option>
+<option value="15">15-Year Fixed</option>
+</select>
+</div>
+
+<div class="field">
 <label for="calcValue">Estimated Property Value ($)</label>
-<input type="number" id="calcValue" step="1000" min="0" placeholder="650000">
+<input type="number" id="calcValue" step="1000" min="0" placeholder="650000" value="650000">
 </div>
 
 <!-- Year / Remaining Term toggle -->
@@ -198,7 +236,7 @@ footer a:hover{color:var(--white)}
 </div>
 <div id="termYearField">
 <label for="calcYear">Year You Got Your Mortgage</label>
-<input type="number" id="calcYear" min="1970" max="2026" placeholder="2020">
+<input type="number" id="calcYear" min="1970" max="2026" placeholder="2020" value="2020">
 </div>
 <div id="termRemainingField" style="display:none">
 <label for="calcRemaining">Remaining Term (years)</label>
@@ -215,7 +253,7 @@ footer a:hover{color:var(--white)}
 </div>
 <div id="balanceOriginalField">
 <label for="calcOrigBalance">Original Loan Balance ($)</label>
-<input type="number" id="calcOrigBalance" step="1000" min="0" placeholder="500000">
+<input type="number" id="calcOrigBalance" step="1000" min="0" placeholder="500000" value="500000">
 </div>
 <div id="balanceCurrentField" style="display:none">
 <label for="calcCurBalance">Current Loan Balance ($)</label>
@@ -319,6 +357,11 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 <div class="trust-name">Michael Colyer</div>
 <div class="trust-details">28 Years Experience · NMLS #276626 · DRE 01842442</div>
 <div class="trust-team">The Colyer Team</div>
+<div class="trust-values">
+<div class="trust-value"><div class="tv-icon">&#9889;</div><div class="tv-label">Fast Closings</div><div class="tv-sub">21-day average</div></div>
+<div class="trust-value"><div class="tv-icon">&#128176;</div><div class="tv-label">Low-Cost Refis</div><div class="tv-sub">Competitive rates</div></div>
+<div class="trust-value"><div class="tv-icon">&#9734;</div><div class="tv-label">5-Star Reviews</div><div class="tv-sub">Trusted locally</div></div>
+</div>
 <div class="trust-btns">
 <a href="https://outlook.office365.com/owa/calendar/MeetingWithMike@NETORG19778106.onmicrosoft.com/bookings/" target="_blank" class="btn-schedule">📅 Schedule a Call</a>
 <a href="https://michaelcolyer.zipforhome.com" target="_blank" class="btn-apply">📝 Apply Online</a>
@@ -411,7 +454,7 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 const SUPABASE_URL='https://apuctuqlmykeemtcasji.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwdWN0dXFsbXlrZWVtdGNhc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODY5NjMsImV4cCI6MjA3NTM2Mjk2M30.Kyjei2lczrVkFJkOzI8ViLEc-qiOBPrv5TtT6G33MHU';
 
-let rate30yr = 0;
+let rate30yr = 6.5; // default until live rate loads
 const currentYear = new Date().getFullYear();
 
 // ===== Supabase fetch =====
@@ -424,16 +467,25 @@ async function sbFetch(path) {
 
 // ===== Load market rate =====
 async function loadRates() {
+  const sliderLabel = document.querySelector('.slider-label');
+  const origLabel = sliderLabel.textContent;
+  sliderLabel.innerHTML = '<span class="pulse">Loading today\'s rate...</span>';
   try {
     const data = await sbFetch('mortgage_rates_daily?select=product,rate&product=eq.30yr_fixed&order=rate_date.desc&limit=1');
     if (data.length) {
       rate30yr = parseFloat(data[0].rate);
       const slider = document.getElementById('rateSlider');
       slider.value = rate30yr.toFixed(3);
+      sliderLabel.textContent = origLabel;
       updateSliderDisplay();
       recalc();
+    } else {
+      sliderLabel.textContent = origLabel;
     }
-  } catch (e) { console.error('Failed to load rates', e); }
+  } catch (e) {
+    console.error('Failed to load rates', e);
+    sliderLabel.textContent = origLabel;
+  }
 }
 
 // ===== Amortization helpers =====
@@ -490,6 +542,7 @@ function getLoanState() {
   if (!curRate) return null;
 
   // Term: figure out remaining months
+  const loanTerm = parseInt(document.getElementById('calcTerm').value) || 30;
   let remainingMonths = null;
   let yearsPaid = 0;
   const termMode = document.querySelector('#termToggle button.active').dataset.mode;
@@ -497,12 +550,12 @@ function getLoanState() {
     const year = parseInt(document.getElementById('calcYear').value);
     if (!year) return null;
     yearsPaid = currentYear - year;
-    remainingMonths = Math.max((30 - yearsPaid) * 12, 12);
+    remainingMonths = Math.max((loanTerm - yearsPaid) * 12, 12);
   } else {
     const rem = parseInt(document.getElementById('calcRemaining').value);
     if (!rem) return null;
     remainingMonths = rem * 12;
-    yearsPaid = 30 - rem;
+    yearsPaid = loanTerm - rem;
   }
 
   // Balance
@@ -512,7 +565,7 @@ function getLoanState() {
     const orig = parseFloat(document.getElementById('calcOrigBalance').value);
     if (!orig) return null;
     const monthsPaid = yearsPaid * 12;
-    currentBalance = remainingBalance(orig, curRate, 360, Math.min(monthsPaid, 359));
+    currentBalance = remainingBalance(orig, curRate, loanTerm * 12, Math.min(monthsPaid, loanTerm * 12 - 1));
     if (currentBalance < 0) currentBalance = orig * 0.9;
     document.getElementById('balanceCalcResult').textContent = 'Estimated current balance: $' + Math.round(currentBalance).toLocaleString();
   } else {
@@ -528,16 +581,17 @@ function getLoanState() {
 function updateTermCalc() {
   const termMode = document.querySelector('#termToggle button.active').dataset.mode;
   const el = document.getElementById('termCalcResult');
+  const lt = parseInt(document.getElementById('calcTerm').value) || 30;
   if (termMode === 'year') {
     const year = parseInt(document.getElementById('calcYear').value);
     if (year) {
-      const rem = 30 - (currentYear - year);
+      const rem = lt - (currentYear - year);
       el.textContent = rem > 0 ? `≈ ${rem} years remaining` : 'Loan may already be mature';
     } else el.textContent = '';
   } else {
     const rem = parseInt(document.getElementById('calcRemaining').value);
     if (rem) {
-      const origYear = currentYear - (30 - rem);
+      const origYear = currentYear - (lt - rem);
       el.textContent = `Originated ≈ ${origYear}`;
     } else el.textContent = '';
   }
@@ -662,7 +716,7 @@ document.querySelectorAll('.toggle-tabs').forEach(group => {
 });
 
 // ===== Input listeners =====
-['calcRate', 'calcYear', 'calcRemaining', 'calcOrigBalance', 'calcCurBalance', 'calcOccupancy', 'retirementYears'].forEach(id => {
+['calcRate', 'calcYear', 'calcRemaining', 'calcOrigBalance', 'calcCurBalance', 'calcOccupancy', 'calcTerm', 'retirementYears'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('input', recalc);
   el.addEventListener('change', recalc);
@@ -722,7 +776,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     return;
   }
 
-  btn.disabled = true; btn.textContent = 'Submitting...';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Submitting...';
 
   const state = getLoanState();
   const newRate = parseFloat(document.getElementById('rateSlider').value) || null;
@@ -768,8 +822,15 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     confetti();
   } catch (err) {
     console.error(err);
-    alert('Something went wrong. Please try again or call us directly.');
-    btn.disabled = false; btn.textContent = '🔔 Alert Me When Rates Drop';
+    let errDiv = document.getElementById('formError');
+    if (!errDiv) {
+      errDiv = document.createElement('div');
+      errDiv.id = 'formError';
+      errDiv.style.cssText = 'color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:center;margin-top:12px;font-size:.9rem';
+      btn.parentNode.insertBefore(errDiv, btn.nextSibling);
+    }
+    errDiv.textContent = 'Something went wrong. Please try again or call us at (760) 692-8014.';
+    btn.disabled = false; btn.innerHTML = '🔔 Alert Me When Rates Drop';
   }
 });
 
@@ -789,6 +850,8 @@ function confetti() {
   }
 }
 
+updateSliderDisplay();
+recalc();
 loadRates();
 </script>
 </body>
