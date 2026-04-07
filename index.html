@@ -166,6 +166,12 @@ footer a:hover{color:var(--white)}
 /* Rate loading */
 .rate-loading{text-align:center;font-size:.85rem;color:var(--blue);padding:4px 0}
 
+/* No-cost toggle */
+.no-cost-row{margin-top:12px;text-align:center}
+.no-cost-row .toggle-tabs{display:inline-flex;margin-bottom:8px}
+.no-cost-callout,.with-cost-callout{font-size:.8rem;color:var(--green-dark);background:var(--green-light);border-radius:8px;padding:8px 14px;max-width:500px;margin:0 auto;font-weight:500}
+.with-cost-callout{color:var(--gray-600);background:var(--gray-100)}
+
 /* Trust value props */
 .trust-values{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin:20px 0;max-width:600px;margin-left:auto;margin-right:auto}
 .trust-value{text-align:center;flex:1;min-width:120px}
@@ -267,14 +273,22 @@ footer a:hover{color:var(--white)}
 <div class="slider-label">Projected New Rate</div>
 <div class="slider-value" id="sliderValue">—.——%</div>
 <div class="slider-container">
-<input type="range" id="rateSlider" min="4.000" max="8.000" step="0.125" value="6.5">
+<input type="range" id="rateSlider" min="4.000" max="8.000" step="0.125" value="8.000">
 <div class="slider-bounds">
 <span id="sliderMin">4.000%</span>
 <span id="sliderMax">8.000%</span>
 </div>
 </div>
+<div class="no-cost-row">
+<div class="toggle-tabs" id="noCostToggle">
+<button class="active" data-mode="nocost">No-Cost Refi</button>
+<button data-mode="withcost">With Closing Costs</button>
 </div>
-<div class="result-disclaimer" style="margin-top:8px;font-size:.65rem;color:var(--gray-400);text-align:center">Rates shown are market averages for informational purposes only and do not constitute a commitment to lend. Your actual rate and APR may vary based on credit score, loan-to-value ratio, loan amount, property type, and other factors. Contact us for a personalized rate quote and full APR details. Equal Housing Lender.</div>
+<div class="no-cost-callout" id="noCostCallout">APR = Note Rate — no lender fees, no points, no closing costs rolled into your rate.</div>
+<div class="with-cost-callout" id="withCostCallout" style="display:none">APR may be higher than the note rate when closing costs and lender fees are included.</div>
+</div>
+</div>
+<div class="result-disclaimer" style="margin-top:8px;font-size:.65rem;color:var(--gray-400);text-align:center">Rates shown are for illustrative purposes only and do not constitute a commitment to lend. Your actual rate and APR may vary based on credit score, loan-to-value ratio, loan amount, property type, and other factors. Contact us for a personalized rate quote and full APR details. Equal Housing Lender.</div>
 
 <!-- RESULTS -->
 <div id="resultsArea">
@@ -453,7 +467,7 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 const SUPABASE_URL='https://apuctuqlmykeemtcasji.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwdWN0dXFsbXlrZWVtdGNhc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODY5NjMsImV4cCI6MjA3NTM2Mjk2M30.Kyjei2lczrVkFJkOzI8ViLEc-qiOBPrv5TtT6G33MHU';
 
-let rate30yr = 6.5; // default until live rate loads
+let rate30yr = 8.0; // default to max until live rate loads
 const currentYear = new Date().getFullYear();
 
 // ===== Supabase fetch =====
@@ -708,6 +722,9 @@ document.querySelectorAll('.toggle-tabs').forEach(group => {
       } else if (group.id === 'balanceToggle') {
         document.getElementById('balanceOriginalField').style.display = mode === 'original' ? 'block' : 'none';
         document.getElementById('balanceCurrentField').style.display = mode === 'current' ? 'block' : 'none';
+      } else if (group.id === 'noCostToggle') {
+        document.getElementById('noCostCallout').style.display = mode === 'nocost' ? 'block' : 'none';
+        document.getElementById('withCostCallout').style.display = mode === 'withcost' ? 'block' : 'none';
       }
       recalc();
     });
