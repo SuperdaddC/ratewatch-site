@@ -273,10 +273,10 @@ footer a:hover{color:var(--white)}
 <div class="slider-label">Projected New Rate</div>
 <div class="slider-value" id="sliderValue">—.——%</div>
 <div class="slider-container">
-<input type="range" id="rateSlider" min="4.000" max="8.000" step="0.125" value="8.000">
+<input type="range" id="rateSlider" min="3.000" max="10.000" step="0.125" value="10.000">
 <div class="slider-bounds">
-<span id="sliderMin">4.000%</span>
-<span id="sliderMax">8.000%</span>
+<span id="sliderMin">3.000%</span>
+<span id="sliderMax">10.000%</span>
 </div>
 </div>
 <div class="no-cost-row">
@@ -467,7 +467,7 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 const SUPABASE_URL='https://apuctuqlmykeemtcasji.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwdWN0dXFsbXlrZWVtdGNhc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODY5NjMsImV4cCI6MjA3NTM2Mjk2M30.Kyjei2lczrVkFJkOzI8ViLEc-qiOBPrv5TtT6G33MHU';
 
-let rate30yr = 8.0; // default to max until live rate loads
+let rate30yr = 10.0; // default to max until live rate loads
 const currentYear = new Date().getFullYear();
 
 // ===== Supabase fetch =====
