@@ -163,6 +163,10 @@ footer a:hover{color:var(--white)}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* APR display */
+.apr-display{text-align:center;font-size:.85rem;font-weight:600;color:var(--gray-600);margin-bottom:6px}
+.apr-display .apr-value{color:var(--blue-dark)}
+
 /* Rate loading */
 .rate-loading{text-align:center;font-size:.85rem;color:var(--blue);padding:4px 0}
 
@@ -273,6 +277,7 @@ footer a:hover{color:var(--white)}
 <div class="slider-section" id="sliderSection">
 <div class="slider-label">Projected New Rate</div>
 <div class="slider-value" id="sliderValue">—.——%</div>
+<div class="apr-display" id="aprDisplay"></div>
 <div class="slider-container">
 <input type="range" id="rateSlider" min="3.000" max="10.000" step="0.125" value="10.000" aria-label="Projected new interest rate">
 <div class="slider-bounds">
@@ -655,10 +660,50 @@ function updateTermCalc() {
   }
 }
 
+// ===== APR calculation =====
+function calculateAPR(noteRate, principal, closingCosts, termMonths) {
+  // APR = effective rate when closing costs are added to amount financed
+  // Solve for rate where payment on (principal) at APR = payment on (principal + costs) at noteRate
+  // Simpler approximation: find rate that produces same payment on principal alone
+  if (!principal || principal <= 0 || !noteRate) return noteRate;
+  const totalFinanced = principal + closingCosts;
+  const pmt = monthlyPayment(totalFinanced, noteRate, termMonths);
+  // Newton's method to solve for APR
+  let apr = noteRate;
+  for (let i = 0; i < 50; i++) {
+    const pmtAtApr = monthlyPayment(principal, apr, termMonths);
+    const diff = pmtAtApr - pmt;
+    if (Math.abs(diff) < 0.001) break;
+    // Nudge rate
+    const pmtUp = monthlyPayment(principal, apr + 0.001, termMonths);
+    const deriv = (pmtUp - pmtAtApr) / 0.001;
+    if (deriv === 0) break;
+    apr -= diff / deriv;
+  }
+  return Math.round(apr * 1000) / 1000;
+}
+
 // ===== Slider =====
 function updateSliderDisplay() {
   const val = parseFloat(document.getElementById('rateSlider').value);
   document.getElementById('sliderValue').textContent = val.toFixed(3) + '%';
+  updateAPRDisplay(val);
+}
+
+function updateAPRDisplay(noteRate) {
+  const aprEl = document.getElementById('aprDisplay');
+  const isNoCost = document.querySelector('#noCostToggle button.active').dataset.mode === 'nocost';
+  if (isNoCost) {
+    aprEl.innerHTML = 'APR: <span class="apr-value">' + noteRate.toFixed(3) + '%</span>';
+  } else {
+    const balance = getCurrentBalance();
+    if (balance > 0) {
+      const apr = calculateAPR(noteRate, balance, NOCOST_CLOSING_COSTS, 360);
+      aprEl.innerHTML = 'APR: <span class="apr-value">' + apr.toFixed(3) + '%</span>';
+    } else {
+      aprEl.innerHTML = '';
+    }
+  }
 }
 
 // ===== Main recalculation =====
