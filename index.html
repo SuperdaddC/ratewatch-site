@@ -267,13 +267,14 @@ footer a:hover{color:var(--white)}
 <div id="balanceCalcResult" style="font-size:.8rem;color:var(--blue);margin-top:4px"></div>
 </div>
 </div>
+<div id="ltvDisplay" style="display:none;font-size:.8rem;color:var(--gold);font-weight:600;text-align:center;margin-top:8px"></div>
 
 <!-- SLIDER -->
 <div class="slider-section" id="sliderSection">
 <div class="slider-label">Projected New Rate</div>
 <div class="slider-value" id="sliderValue">—.——%</div>
 <div class="slider-container">
-<input type="range" id="rateSlider" min="3.000" max="10.000" step="0.125" value="10.000">
+<input type="range" id="rateSlider" min="3.000" max="10.000" step="0.125" value="10.000" aria-label="Projected new interest rate">
 <div class="slider-bounds">
 <span id="sliderMin">3.000%</span>
 <span id="sliderMax">10.000%</span>
@@ -345,7 +346,7 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 <div class="field full"><label for="email">Email *</label><input type="email" id="email" required></div>
 <div class="field"><label for="phone">Phone (optional)</label><input type="tel" id="phone"></div>
 <div class="field full"><label for="calcAddress">Property Address</label><input type="text" id="calcAddress" placeholder="123 Main St, City, CA 92057"></div>
-<div class="field"><label for="targetRate">Target Rate (%)</label><input type="number" id="targetRate" step="0.125" min="0" max="15" placeholder="Pre-filled from slider"></div>
+<div class="field full"><label for="targetRate">Target Rate (%)</label><input type="number" id="targetRate" step="0.125" min="0" max="15" placeholder="Pre-filled from slider"></div>
 <!-- Honeypot — hidden from humans, bots fill it in -->
 <div class="field" style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
 <label for="website">Website</label>
@@ -376,8 +377,8 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 <div class="trust-value"><div class="tv-icon">&#9734;</div><div class="tv-label">5-Star Reviews</div><div class="tv-sub">Trusted locally</div></div>
 </div>
 <div class="trust-btns">
-<a href="https://outlook.office365.com/owa/calendar/MeetingWithMike@NETORG19778106.onmicrosoft.com/bookings/" target="_blank" class="btn-schedule">📅 Schedule a Call</a>
-<a href="https://michaelcolyer.zipforhome.com" target="_blank" class="btn-apply">📝 Apply Online</a>
+<a href="https://outlook.office365.com/owa/calendar/MeetingWithMike@NETORG19778106.onmicrosoft.com/bookings/" target="_blank" rel="noopener" class="btn-schedule">📅 Schedule a Call</a>
+<a href="https://michaelcolyer.zipforhome.com" target="_blank" rel="noopener" class="btn-apply">📝 Apply Online</a>
 </div>
 </div>
 </section>
@@ -391,7 +392,7 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 <div class="footer-contact">
 <a href="mailto:judy@vip.thecolyerteam.com">judy@vip.thecolyerteam.com</a>
 </div>
-<div style="max-width:620px;margin:10px auto">Rates shown are market averages and do not constitute a commitment to lend. Your actual rate and APR may vary based on credit score, loan-to-value ratio, loan amount, and other factors. Contact us for current rates and APR details.</div>
+<div style="max-width:620px;margin:10px auto">Rates shown are for illustrative purposes only and do not constitute a commitment to lend. Your actual rate and APR may vary based on credit score, loan-to-value ratio, loan amount, and other factors. Contact us for current rates and APR details.</div>
 <div class="footer-links">
 <a href="https://www.nmlsconsumeraccess.org/" target="_blank" rel="noopener">NMLS Consumer Access</a>
 <a href="#" onclick="document.getElementById('privacyModal').classList.add('active');return false">Privacy Policy</a>
@@ -467,8 +468,10 @@ Hypothetical illustration only. Actual investment returns may vary. Past perform
 const SUPABASE_URL='https://apuctuqlmykeemtcasji.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwdWN0dXFsbXlrZWVtdGNhc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODY5NjMsImV4cCI6MjA3NTM2Mjk2M30.Kyjei2lczrVkFJkOzI8ViLEc-qiOBPrv5TtT6G33MHU';
 
-let rate30yr = 10.0; // default to max until live rate loads
+let parRate = 0; // base par rate from Supabase
+let rate30yr = 10.0; // displayed rate (may include no-cost premium)
 const currentYear = new Date().getFullYear();
+const NOCOST_CLOSING_COSTS = 10000; // estimated closing costs covered by rate bump
 
 // ===== Supabase fetch =====
 async function sbFetch(path) {
@@ -478,26 +481,68 @@ async function sbFetch(path) {
   return r.json();
 }
 
+// ===== No-cost rate premium =====
+function getNoCostPremium() {
+  const balance = getCurrentBalance();
+  if (!balance || balance <= 0) return 0.5; // fallback 0.5%
+  // For every 0.5% rate increase, lender credit = 1% of loan amount
+  // premium% = (closingCosts / loanBalance) * 100 * 0.5
+  const premium = (NOCOST_CLOSING_COSTS / balance) * 100 * 0.5;
+  // Round to nearest 0.125 (standard rate step)
+  return Math.round(premium / 0.125) * 0.125 || 0.125;
+}
+
+function getCurrentBalance() {
+  const balMode = document.querySelector('#balanceToggle button.active').dataset.mode;
+  if (balMode === 'current') {
+    return parseFloat(document.getElementById('calcCurBalance').value) || 0;
+  }
+  const orig = parseFloat(document.getElementById('calcOrigBalance').value) || 0;
+  const curRate = parseFloat(document.getElementById('calcRate').value) || 0;
+  const loanTerm = parseInt(document.getElementById('calcTerm').value) || 30;
+  const termMode = document.querySelector('#termToggle button.active').dataset.mode;
+  let yearsPaid = 0;
+  if (termMode === 'year') {
+    const year = parseInt(document.getElementById('calcYear').value) || currentYear;
+    yearsPaid = currentYear - year;
+  } else {
+    const rem = parseInt(document.getElementById('calcRemaining').value) || loanTerm;
+    yearsPaid = loanTerm - rem;
+  }
+  if (orig && curRate) {
+    return remainingBalance(orig, curRate, loanTerm * 12, Math.min(yearsPaid * 12, loanTerm * 12 - 1));
+  }
+  return orig || 0;
+}
+
+function setSliderToMarketRate() {
+  if (!parRate) return;
+  const isNoCost = document.querySelector('#noCostToggle button.active').dataset.mode === 'nocost';
+  const premium = isNoCost ? getNoCostPremium() : 0;
+  rate30yr = parRate + premium;
+  const slider = document.getElementById('rateSlider');
+  slider.value = Math.min(rate30yr, parseFloat(slider.max)).toFixed(3);
+  updateSliderDisplay();
+  recalc();
+}
+
 // ===== Load market rate =====
 async function loadRates() {
   const sliderLabel = document.querySelector('.slider-label');
-  const origLabel = sliderLabel.textContent;
   sliderLabel.innerHTML = '<span class="pulse">Loading today\'s rate...</span>';
   try {
-    const data = await sbFetch('mortgage_rates_daily?select=product,rate&product=eq.30yr_fixed&order=rate_date.desc&limit=1');
+    const data = await sbFetch('mortgage_rates_daily?select=product,rate,rate_date&product=eq.30yr_fixed&order=rate_date.desc&limit=1');
     if (data.length) {
-      rate30yr = parseFloat(data[0].rate);
-      const slider = document.getElementById('rateSlider');
-      slider.value = rate30yr.toFixed(3);
-      sliderLabel.textContent = origLabel;
-      updateSliderDisplay();
-      recalc();
+      parRate = parseFloat(data[0].rate);
+      const rateDate = data[0].rate_date ? new Date(data[0].rate_date + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
+      sliderLabel.innerHTML = 'Today\'s Estimated Rate' + (rateDate ? ' <span style="font-size:.7rem;opacity:.6;font-weight:400">as of ' + rateDate + '</span>' : '');
+      setSliderToMarketRate();
     } else {
-      sliderLabel.textContent = origLabel;
+      sliderLabel.textContent = 'Projected New Rate';
     }
   } catch (e) {
     console.error('Failed to load rates', e);
-    sliderLabel.textContent = origLabel;
+    sliderLabel.textContent = 'Projected New Rate';
   }
 }
 
@@ -621,6 +666,24 @@ function recalc() {
   const state = getLoanState();
   updateTermCalc();
 
+  // Update remaining term max to match loan term
+  const loanTermForMax = parseInt(document.getElementById('calcTerm').value) || 30;
+  const remInput = document.getElementById('calcRemaining');
+  remInput.max = loanTermForMax;
+  if (parseInt(remInput.value) > loanTermForMax) remInput.value = loanTermForMax;
+
+  // Show LTV if we have balance and property value
+  const propValue = parseFloat(document.getElementById('calcValue').value);
+  const curBal = state ? state.currentBalance : getCurrentBalance();
+  const ltvEl = document.getElementById('ltvDisplay');
+  if (propValue && curBal && propValue > 0) {
+    const ltv = (curBal / propValue * 100).toFixed(1);
+    ltvEl.textContent = 'Estimated LTV: ' + ltv + '%' + (ltv > 80 ? ' — PMI may apply' : '');
+    ltvEl.style.display = 'block';
+  } else {
+    ltvEl.style.display = 'none';
+  }
+
   if (!state || !rate30yr) {
     document.getElementById('resultsRow').style.display = 'none';
     document.getElementById('resultsPlaceholder').style.display = 'block';
@@ -633,9 +696,11 @@ function recalc() {
 
   // Old payment on CURRENT remaining term
   const oldPayment = monthlyPayment(currentBalance, curRate, remainingMonths);
-  // New payment on 30yr at new rate
-  const newPayment = monthlyPayment(currentBalance, newRate, 360);
+  // New payment on new 30yr term at new rate
+  const newTermYears = 30;
+  const newPayment = monthlyPayment(currentBalance, newRate, newTermYears * 12);
   const savings = oldPayment - newPayment;
+  const origTermYears = parseInt(document.getElementById('calcTerm').value) || 30;
 
   document.getElementById('resultsPlaceholder').style.display = 'none';
   document.getElementById('resultsRow').style.display = 'grid';
@@ -645,7 +710,7 @@ function recalc() {
   const retMonths = retYears * 12;
 
   // Normal new loan balance at retirement (used by Box 1 & 3)
-  const normalBalAtRet = balanceAfterNMonths(currentBalance, newRate, 360, Math.min(retMonths, 360), newPayment);
+  const normalBalAtRet = balanceAfterNMonths(currentBalance, newRate, newTermYears * 12, Math.min(retMonths, newTermYears * 12), newPayment);
 
   // Box 1: Monthly Savings
   if (savings > 0) {
@@ -664,13 +729,13 @@ function recalc() {
   if (savings > 0) {
     const acceleratedPayment = newPayment + savings;
     const accelMonths = solveMonths(currentBalance, newRate, acceleratedPayment);
-    const normalMonths = 360;
+    const normalMonths = newTermYears * 12;
     const savedMonths = normalMonths - accelMonths;
     if (savedMonths > 0) {
       const doneYrs = Math.floor(accelMonths / 12);
       const doneMo = Math.round(accelMonths % 12);
       document.getElementById('resTermShorten').textContent = 'Paid off in ' + doneYrs + (doneMo > 0 ? '.5' : '') + ' years';
-      document.getElementById('resTermSub').textContent = 'Instead of 30 years';
+      document.getElementById('resTermSub').textContent = 'Instead of ' + newTermYears + ' years';
       // Balance at retirement with accelerated payments
       const accelBalAtRet = balanceAfterNMonthsAccel(currentBalance, newRate, Math.min(retMonths, Math.ceil(accelMonths)), acceleratedPayment);
       if (accelBalAtRet <= 0 || retMonths >= accelMonths) {
@@ -679,7 +744,7 @@ function recalc() {
         document.getElementById('retBalTerm').innerHTML = 'Balance at retirement:<strong>$' + Math.round(accelBalAtRet).toLocaleString() + '</strong>';
       }
     } else {
-      document.getElementById('resTermShorten').textContent = '30 years';
+      document.getElementById('resTermShorten').textContent = newTermYears + ' years';
       document.getElementById('resTermSub').textContent = 'No acceleration';
       document.getElementById('retBalTerm').innerHTML = 'Balance at retirement:<strong>$' + Math.round(normalBalAtRet).toLocaleString() + '</strong>';
     }
@@ -725,6 +790,7 @@ document.querySelectorAll('.toggle-tabs').forEach(group => {
       } else if (group.id === 'noCostToggle') {
         document.getElementById('noCostCallout').style.display = mode === 'nocost' ? 'block' : 'none';
         document.getElementById('withCostCallout').style.display = mode === 'withcost' ? 'block' : 'none';
+        if (parRate) { setSliderToMarketRate(); return; }
       }
       recalc();
     });
@@ -732,7 +798,7 @@ document.querySelectorAll('.toggle-tabs').forEach(group => {
 });
 
 // ===== Input listeners =====
-['calcRate', 'calcYear', 'calcRemaining', 'calcOrigBalance', 'calcCurBalance', 'calcOccupancy', 'calcTerm', 'retirementYears'].forEach(id => {
+['calcRate', 'calcYear', 'calcRemaining', 'calcOrigBalance', 'calcCurBalance', 'calcOccupancy', 'calcTerm', 'calcValue', 'retirementYears'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('input', recalc);
   el.addEventListener('change', recalc);
@@ -865,6 +931,22 @@ function confetti() {
     setTimeout(() => el.remove(), 5000);
   }
 }
+
+// ===== Dollar formatting on blur =====
+['calcValue', 'calcOrigBalance', 'calcCurBalance'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('blur', function() {
+    const v = parseFloat(this.value);
+    if (v) this.value = Math.round(v);
+  });
+});
+
+// Also recalc slider when balance changes (affects no-cost premium)
+['calcOrigBalance', 'calcCurBalance'].forEach(id => {
+  document.getElementById(id).addEventListener('change', function() {
+    if (parRate) setSliderToMarketRate();
+  });
+});
 
 updateSliderDisplay();
 recalc();
