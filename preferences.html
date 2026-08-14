@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Email &amp; text preferences — Michael Colyer</title>
+<!--
+  Landing page for the two buttons in the daily rate email.
+
+  It lives here rather than on the edge function because Supabase forces
+  Content-Type: text/plain on anything served from *.supabase.co/functions/v1,
+  which makes a returned HTML page render as raw source in the browser. This page
+  is served from a real domain and calls the function as a JSON API instead.
+
+  Nothing mutates on load — the confirm button issues the POST — so a mail
+  scanner prefetching the link cannot opt anyone in or out.
+-->
+<style>
+  :root { --ink:#0f172a; --body:#1e293b; --muted:#64748b; --line:#e2e8f0; --red:#cf202b; --green:#15803d; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px; background:#f8fafc; color:var(--body);
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; line-height:1.6; }
+  .card { max-width:520px; margin:32px auto; background:#fff; border:1px solid var(--line);
+          border-radius:14px; padding:30px 26px; }
+  .bar { border-left:4px solid var(--red); padding-left:14px; margin-bottom:22px; }
+  .bar h1 { margin:0; font-size:21px; color:var(--ink); }
+  .bar p  { margin:3px 0 0; font-size:13px; color:var(--muted); }
+  .consent { background:#f1f5f9; border-radius:9px; padding:15px; font-size:13px; color:#475569; }
+  label { display:block; font-size:13px; color:#475569; margin:18px 0 6px; }
+  input[type=tel] { width:100%; padding:14px; border:1px solid #cbd5e1; border-radius:9px; font-size:16px; }
+  button { width:100%; padding:17px; border:none; border-radius:9px; font-size:17px;
+           font-weight:700; color:#fff; cursor:pointer; margin-top:16px; }
+  button:disabled { opacity:.6; cursor:default; }
+  .go   { background:var(--green); }
+  .stop { background:#b91c1c; }
+  .ghost { background:#fff; color:#b91c1c; border:1px solid #b91c1c; font-size:14px; font-weight:600; padding:13px; }
+  .fine { font-size:12px; color:var(--muted); margin-top:16px; }
+  .foot { margin-top:26px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:#94a3b8; }
+  .err  { color:#b91c1c; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bar"><h1 id="title">One moment…</h1><p id="sub"></p></div>
+  <div id="content"></div>
+  <div class="foot">
+    Michael Colyer · NMLS #276626 · Senior Loan Officer, Approved Mortgage<br>
+    2214 Faraday Ave, Carlsbad, CA 92008 · (650) 288-8170
+  </div>
+</div>
+
+<script>
+(function () {
+  var API = "https://apuctuqlmykeemtcasji.supabase.co/functions/v1/rate-preferences";
+  var CONSENT = "I agree to receive mortgage rate updates from Michael Colyer (Approved Mortgage, " +
+    "NMLS #276626) by text message or iMessage. I understand message frequency is about one per " +
+    "business day, message and data rates may apply, and I can stop at any time by replying STOP.";
+
+  var q = new URLSearchParams(location.search);
+  var action = q.get("action") || "";
+  var email = (q.get("email") || "").trim();
+  var title = document.getElementById("title");
+  var sub = document.getElementById("sub");
+  var content = document.getElementById("content");
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function send(params, onDone) {
+    var url = API + "?format=json&" + new URLSearchParams(params).toString();
+    fetch(url, { method: "POST" })
+      .then(function (r) { return r.json(); })
+      .then(onDone)
+      .catch(function () {
+        content.innerHTML = '<p class="err">That didn\'t go through. Check your connection and try again, ' +
+          'or just reply to the email and I\'ll take care of it.</p>';
+      });
+  }
+
+  if (!email || (action !== "unsubscribe" && action !== "sms-optin")) {
+    title.textContent = "This link looks incomplete";
+    content.innerHTML = "<p>Reply to any email from me and I'll sort it out directly.</p>";
+    return;
+  }
+
+  if (action === "unsubscribe") {
+    title.textContent = "Stop rate updates?";
+    sub.textContent = email;
+    content.innerHTML =
+      "<p>Confirm and the daily rate email stops right away. No hard feelings.</p>" +
+      '<button class="stop" id="stopRates">Yes, stop the rate updates</button>' +
+      '<button class="ghost" id="stopAll">Stop everything — no email from me at all</button>' +
+      '<p class="fine">Nothing has changed yet.</p>';
+
+    function unsub(scope, btn) {
+      btn.disabled = true; btn.textContent = "Working…";
+      send({ action: "unsubscribe", email: email, scope: scope }, function (res) {
+        title.textContent = res && res.ok ? "Done — you're off the list" : "Something went wrong";
+        sub.textContent = "";
+        content.innerHTML = res && res.ok
+          ? "<p><strong>" + esc(email) + "</strong> " + (scope === "all"
+              ? "has been removed from all email from me."
+              : "will no longer receive the daily rate email.") +
+            "</p><p class=\"fine\">Effective immediately. Changed your mind? Just reply to an earlier email.</p>"
+          : '<p class="err">I couldn\'t complete that. Reply to the email and I\'ll remove you by hand.</p>';
+      });
+    }
+    document.getElementById("stopRates").onclick = function () { unsub("rates", this); };
+    document.getElementById("stopAll").onclick = function () { unsub("all", this); };
+    return;
+  }
+
+  title.textContent = "Get rates by text?";
+  sub.textContent = email;
+  content.innerHTML =
+    "<p>The same daily rate snapshot, straight to your phone instead of your inbox.</p>" +
+    '<p class="consent">' + esc(CONSENT) + "</p>" +
+    '<label for="phone">Mobile number</label>' +
+    '<input type="tel" id="phone" placeholder="(650) 555-1234" autocomplete="tel">' +
+    '<button class="go" id="optin">YES — TEXT ME THE RATES</button>' +
+    '<p class="fine">You choose this — I never add anyone. Nothing is recorded until you press the button.</p>';
+
+  document.getElementById("optin").onclick = function () {
+    var phone = document.getElementById("phone").value.replace(/\D/g, "");
+    if (phone.length < 10) {
+      document.getElementById("phone").focus();
+      document.getElementById("phone").style.borderColor = "#b91c1c";
+      return;
+    }
+    var btn = this; btn.disabled = true; btn.textContent = "Working…";
+    send({ action: "sms-optin", email: email, phone: phone }, function (res) {
+      title.textContent = res && res.ok ? "You're signed up" : "Something went wrong";
+      sub.textContent = "";
+      content.innerHTML = res && res.ok
+        ? "<p>Rate updates will go to <strong>" + esc(res.phone || phone) + "</strong>.</p>" +
+          '<p class="fine">Consent recorded ' + new Date().toISOString().slice(0, 10) +
+          ". Reply STOP any time to end it.</p>"
+        : '<p class="err">I couldn\'t complete that. Reply to the email and I\'ll add you by hand.</p>';
+    });
+  };
+})();
+</script>
+</body>
+</html>
